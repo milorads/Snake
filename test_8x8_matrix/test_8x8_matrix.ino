@@ -1,38 +1,3 @@
-/*
-  Row-Column Scanning an 8x8 LED matrix with X-Y input
-
- This example controls an 8x8 LED matrix using two analog inputs
-
- created 27 May 2009
- modified 30 Aug 2011
- by Tom Igoe
-
- This example works for the Lumex  LDM-24488NI Matrix. See
- http://sigma.octopart.com/140413/datasheet/Lumex-LDM-24488NI.pdf
- for the pin connections
-
- For other LED cathode column matrixes, you should only need to change
- the pin numbers in the row[] and column[] arrays
-
- rows are the anodes
- cols are the cathodes
- ---------
-
- Pin numbers:
- Matrix:
- * Digital pins 2 through 13,
- * analog pins 2 through 5 used as digital 16 through 19
- Potentiometers:
- * center pins are attached to analog pins 0 and 1, respectively
- * side pins attached to +5V and ground, respectively.
-
- This example code is in the public domain.
-
- http://www.arduino.cc/en/Tutorial/RowColumnScanning
-
- see also http://www.tigoe.net/pcomp/code/category/arduinowiring/514 for more
- */
-
 
 // 2-dimensional array of row pin numbers:
 const int row[8] = {
@@ -48,10 +13,11 @@ const int col[8] = {
 int pixels[8][8];
 
 // cursor position:
-int x = 5;
-int y = 5;
+int x = 0;
+int y = 0;
 
 void setup() {
+  Serial.begin(9600);
   // initialize the I/O pins as outputs
   // iterate over the pins:
   for (int thisPin = 0; thisPin < 8; thisPin++) {
@@ -60,23 +26,27 @@ void setup() {
     pinMode(row[thisPin], OUTPUT);
     // take the col pins (i.e. the cathodes) high to ensure that
     // the LEDS are off:
-    digitalWrite(col[thisPin], HIGH);
   }
 
-  // initialize the pixel matrix:
-  for (int x = 0; x < 8; x++) {
-    for (int y = 0; y < 8; y++) {
-      pixels[x][y] = HIGH;
-    }
-  }
+//  // initialize the pixel matrix:
+//  for (int x = 0; x < 8; x++) {
+//    for (int y = 0; y < 8; y++) {
+//      pixels[x][y] = HIGH;
+//    }
+//  }
 }
 
 void loop() {
   // read input:
-  readSensors();
-
+//  readSensors();
   // draw the screen:
-  refreshScreen();
+//  refreshScreen();
+for(int i=0;i<8;i++)
+  {
+    pixels[i][i] = HIGH;
+//    row[i] = HIGH;
+    delay(500);
+  }
 }
 
 void readSensors() {
