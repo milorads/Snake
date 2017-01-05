@@ -57,6 +57,7 @@ int count = 30;
 bool bg = false;
 
 void setup() {
+  Serial.begin(9600);
   // initialize the I/O pins as outputs
   // iterate over the pins:
   for (int thisPin = 0; thisPin < 8; thisPin++) {
@@ -75,51 +76,67 @@ void setup() {
 void loop() {
 
   // draw the screen:
-  refreshScreen();
-  
-  if(count-- == 0){
-    count = 500;
-    if(posX--==0){
-      posX = 7;
-      if(posY--==0){
-        posY = 7;
-        bg = !bg;
-      }
-    }
-    setupScreen();
+//  refreshScreen();
+//  
+//  if(count-- == 0){
+//    count = 500;
+//    if(posX--==0){
+//      posX = 7;
+//      if(posY--==0){
+//        posY = 7;
+//        bg = !bg;
+//      }
+//    }
+//    setupScreen();
+//
+//  }
 
-  }
+test();
+
+}
+
+void test()
+{
+  for(int i=0; i<8;i++){
+      for(int j=0; j<8;j++){
+                digitalWrite(row[i], HIGH);
+        digitalWrite(col[j], HIGH);
+      } 
+    }  
 }
 
 void setupScreen(){
+  Serial.println("Setup.");
   if(bg){
     //ON all others
+    Serial.println("Inside bg for/for");
     for (int x = 0; x < 8; x++) {
       for (int y = 0; y < 8; y++) {
         pixels[x][y] = LOW;
       }
-    }
-    
+    }       
+            Serial.println("Pos x: "+(String)posX+" Pos y: "+(String)posY);
     //OFF current pos
     pixels[posX][posY] = HIGH;
   }else{
+     Serial.println("Inside else for/for");
     //OFF all others
     for (int x = 0; x < 8; x++) {
       for (int y = 0; y < 8; y++) {
         pixels[x][y] = HIGH;
       }
     }
-    
     //ON current pos
-    pixels[posX][posY] = LOW;
   }
 }
 
 void refreshScreen() {
+  Serial.println("Refresh.");
   // iterate over the rows (anodes):
   for (int thisRow = 0; thisRow < 8; thisRow++) {
     // take the row pin (anode) high:
     digitalWrite(row[thisRow], HIGH);
+    Serial.println((String)row[thisRow]);
     // iterate over the cols (cathodes):
     for (int thisCol = 0; thisCol < 8; thisCol++) {
       // get the state of the current pixel;
@@ -127,12 +144,15 @@ void refreshScreen() {
       // when the row is HIGH and the col is LOW,
       // the LED where they meet turns on:
       digitalWrite(col[thisCol], thisPixel);
+      Serial.println((String)col[thisCol]+" pixel: "+ thisPixel);
       // turn the pixel off:
       if (thisPixel == LOW) {
         digitalWrite(col[thisCol], HIGH);
+        Serial.println((String)col[thisCol]);
       }
     }
     // take the row pin low to turn off the whole row:
     digitalWrite(row[thisRow], LOW);
+    Serial.println((String)row[thisRow]);
   }
 }
