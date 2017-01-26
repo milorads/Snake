@@ -65,12 +65,12 @@ void loop() {
     move(direction); //Postavljamo novi smer kretanja zmije
 
     checkIfHitFood(); //Provjera da li je zmija pojela hranu na ekranu
-    checkIfHitSelf(); //Checks if the snake hits itself.
+    checkIfHitSelf(); //Provjera da li je zmija udarila sama u sebe
 
-    drawSnake(); //Draws the snake on the MAX7219.
-    drawFood(); //Draws the food on the MAX7219.
+    drawSnake(); //Crtanje zmije putem MAX7219 drajvera
+    drawFood(); //Crtanje hrane putem MAX7219 drajvera
 
-    delay(speed); //Delay with the configured time from above.
+    delay(speed); //pauza koja oznacava brzinu zmije
   }
 }
 
@@ -108,17 +108,17 @@ void move(String dir) {
   }
 }
 
-//This method loops through all the snake parts and draws them on the MAX7219.
+//Metoda za crtanje zmije
 void drawSnake() {
   for (int i = 0; i < snakeSize; i++) {
-    lc.setLed(0, snakeY[i], snakeX[i], true);
+    lc.setLed(0, snakeY[i], snakeX[i], true); // Pozivanjem biblioteke sa koordinatama zmije pale se diode na ekranu
   }
 }
 
-//This method draws the food on the MAX7219.
+//Metoda za crtanje hrane
 void drawFood() {
   lc.setLed(0, foodY, foodX, true);
-  delay(50); //Have a short delay here to make the food blink and differentiate from the snake parts.
+  delay(50); //Delay koji daje hrani blink da bi se lako razlikovala od zmije
   lc.setLed(0, foodY, foodX, false);
 }
 
@@ -126,7 +126,7 @@ void drawFood() {
 void newFood() {
   int newFoodX = random(0, 8);
   int newFoodY = random(0, 8);
-  while (isSnake(newFoodX, newFoodY)) { //Ako su koordinate na lokaciji zmijice, pokusava se generacija nove dok ne bude van pozicije zmije
+  while (isSnake(newFoodX, newFoodY)) { //Ako su koordinate na lokaciji zmije, pokusava se generacija nove dok ne bude van pozicije zmije
     newFoodX = random(0, 8);
     newFoodY = random(0, 8);
   }
@@ -134,19 +134,19 @@ void newFood() {
   foodY = newFoodY; // postavljanje hrane na ekran
 }
 
-//This method checks if the snake moves onto the food.
+//Metod za provjeru kada zmija pojede hranu
 void checkIfHitFood() {
-  if (snakeX[0] == foodX && snakeY[0] == foodY) {
-    snakeSize++; //Add a snake body part.
-    newFood(); //Create a new food at a new location.
+  if (snakeX[0] == foodX && snakeY[0] == foodY) { // ako je zmijina glava po x osi i y osi ista kao i x/y ose hrane
+    snakeSize++; //Dodajemo zmiji jos jednu tacku na velicinu
+    newFood(); //Kreiramo jos jednu tacku hrane.
   }
 }
 
-//This method checks if the snake moves onto itself.
+//Metod za provjeru da li je zima udarila u svoje tijelo
 void checkIfHitSelf() {
   for (int i = 1; i < snakeSize - 1; i++) {
-    if (snakeX[0] == snakeX[i] && snakeY[0] == snakeY[i]) {
-      gameOver(); //Call the gameOver() method.
+    if (snakeX[0] == snakeX[i] && snakeY[0] == snakeY[i]) { // ako se poklapaju koordinate glave i tijela po x i y osi
+      gameOver(); //Pozivamo metodu za prekid igre
     }
   }
 }
@@ -178,24 +178,24 @@ void newGame() {
   inGame = true; //Podesavanje varijable koja oznacava da je mod "u igri" i pokrece kod i void loop()-a
 }
 
-//This method is called when the snake hits itself.
-//It loops through all the coordinates of the MAX7219, making a fancy pattern.
+//Metoda za prekid igre
+//Pravi prelaz preko cijelog ekrana po pattern-u oznacavajuci kraj igre
 void gameOver() {
-  inGame = false; //Makes sure the game is stopped.
-  for (int x = 0; x < 8; x++) {
+  inGame = false; //Stavljamo "u igri" na false da ne bi program presao u loop
+  for (int x = 0; x < 8; x++) { // pattern 
     for (int y = 0; y < 8; y++) {
       lc.setLed(0, y, x, true);
       delay(20);
       lc.setLed(0, y, x, false);
     }
   }
-  bool switchButton = true;
+  bool switchButton = true; // Postavljamo vrijednost koja ce cekati na pritisak dugmeta
   while(switchButton)
   {
-    if(digitalRead(SW_pin)==0)
+    if(digitalRead(SW_pin)==0) // Kada je dugme za pocetak nove igre pritisnuto, izlazimo iz loop-a
     {
             switchButton = false;
     }
   }
-  newGame();
+  newGame(); // Pokrecemo novu igru.
 }
