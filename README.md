@@ -1,3 +1,3 @@
 # Snake
 
--Matrix test and the project intended for Arduino Due (in order to use arduino with less pins, add led driver)
+Snake game for Arduino platform, including MAX7219 driver and analog joystick with digital button
