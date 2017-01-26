@@ -47,6 +47,7 @@ void loop() {
     Serial.println("Reading from joystick");
     Serial.println(xAxis); //Prints the x axis to the serial for debugging.
     Serial.println(yAxis); //Prints the y axis to the serial for debugging.
+    Serial.println(digitalRead(SW_pin));
 
     if (yAxis > 900 && direction != "up") { //If player moves the analog stick up, and if snake isn't going down.
       direction = "down";
@@ -194,26 +195,13 @@ void gameOver() {
       lc.setLed(0, y, x, false);
     }
   }
-  listenToJoystick();
-  //newGame();
-}
-void listenToJoystick()
-{
-    xAxis = analogRead(joyPin1); //Gets the value of the x axis.
-    yAxis = analogRead(joyPin2); //Gets the value of the y axis.
-
-    Serial.println("Reading from joystick");
-    Serial.println(xAxis); //Prints the x axis to the serial for debugging.
-    Serial.println(yAxis); //Prints the y axis to the serial for debugging.
-
-    if (yAxis > 900 && direction != "up") { //If player moves the analog stick up, and if snake isn't going down.
-      Serial.println("Vertically pressed controller.");
-      newGame();
-      
+  bool switchButton = true;
+  while(switchButton)
+  {
+    if(digitalRead(SW_pin)==0)
+    {
+            switchButton = false;
     }
-    if (yAxis < 500 && direction != "down") { //If player moves the analog stick down, and if snake isn't going up.
-          Serial.println("Vertically pressed controller.");
-          newGame();
-    }
-    delay(20);
+  }
+  newGame();
 }
