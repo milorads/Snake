@@ -1,70 +1,70 @@
-#include "Arduino.h"
-#include "LedControl.h" //LedControl Library from http://www.wayoda.org/arduino/downloads/LedControl.zip
+#include "LedControl.h" //LedControl biblioteka: http://www.wayoda.org/arduino/downloads/LedControl.zip
+//Koristi se za MAX7219 driver pomocu kog se mogu kontrolisati led trake i displeji
 
-LedControl lc = LedControl(12, 11, 10, 1); //(DIN, CLK, CS, Amount of MAX7219)
+LedControl lc = LedControl(12, 11, 10, 1); //(DIN, CLK, CS, broj prikacenih MAX7219)
 
-const int SW_pin = 8;
-int joyPin1 = A0; //Variable that gets the anolog value in the x direction.
-int joyPin2 = A1; //Variable that gets the analog value in the y direction.
-int xAxis = 0; //Variable that stores the value gotten from joyPin1.
-int yAxis = 0; //Variable that stores the value gotten from joyPin2.
+const int SW_pin = 8; // Switch varijabla (vertikalno dugme) na joystick-u
+// Analogni X i Y pinovi sa joystick-a
+int joyPin1 = A0; 
+int joyPin2 = A1; 
+int xAxis = 0; //Varijabla koja cita analogne vrijednosti sa x ose
+int yAxis = 0; //Varijabla koja cita analogne vrijednosti sa y ose
 
-String direction; //Variable that stores the direction the snake is moving in.
+String direction; //Varijabla koja cuva u kom se smjeru krece zmija
 
-int snakeX[36]; //Variable that stores all the x coordinates of the snake.
-int snakeY[36]; //Variable that stores all the y coordinates of the snake.
+int snakeX[36]; //Varijabla za svih 36 pozicija na ekranu po X-u
+int snakeY[36]; //Varijabla za svih 36 pozicija na ekranu po Y-u
 
-int speed = 300; //Delay time for each movement.
+int speed = 300; //Pauza koja oznacava brzinu kretanja (300ms izmedju pokreta sa jedne tacke na drugu)
 
-int snakeSize; //Head + Body size of the snake.
+int snakeSize; //Velicina zmije
 
-int foodX; //Variable that stores the x coordinate of the food.
-int foodY; //Variable that stores the y coordinate of the food.
+int foodX; //Varijabla za cuvanje X ose hrane
+int foodY; //Varijabla za cuvanje Y ose hrane
 
 boolean inGame = false; //Variable that tells us if the game is running.
 
-//This method is called once on startup.
+//Setup metoda koja se poziva pri pokretanju
 void setup() {
-  lc.shutdown(0, false); //Turn off power saving, enables display
-  lc.setIntensity(0, 8); //Brightness (0-15)
-  lc.clearDisplay(0); //Clear Screen
-  Serial.begin(9600);
+  lc.shutdown(0, false); //Funkcija za pokretanje moda za prikazivanje na displeju
+  lc.setIntensity(0, 8); //Jacina osvjetljenja diode na ekranu (0-15)
+  lc.clearDisplay(0); //Gasenje svih dioda
+  Serial.begin(9600); // Zapocinjanje serijske komunikacije sa racunarom
 
-  pinMode(SW_pin, INPUT);
-  digitalWrite(SW_pin, HIGH);
+  pinMode(SW_pin, INPUT); // Postavljanje vertikalnog dugmeta kao ulaz
+  digitalWrite(SW_pin, HIGH); // Default vrijednost dugmeta - 1 (nakon pritiska prelazi na 0)
 
-  newGame(); //Call newGame() to setup everything.
+  newGame(); //Pokretanje nove igre.
 }
 
-//This method loops through itself.
+//Loop metoda koja je beskonacni while loop na arduinu
 void loop() {
-  if (inGame) { //Checks if game is running.
-    lc.clearDisplay(0); //Clear screen.
+  if (inGame) { //Provjera da li je u modu "u igri".
+    lc.clearDisplay(0); //Gasenje svih dioda 
 
-    xAxis = analogRead(joyPin1); //Gets the value of the x axis.
-    yAxis = analogRead(joyPin2); //Gets the value of the y axis.
+    xAxis = analogRead(joyPin1); //Uzimanje x ose sa joystick-a
+    yAxis = analogRead(joyPin2); //Uzimanje y ose sa joystick-a
 
     Serial.println("Reading from joystick");
-    Serial.println(xAxis); //Prints the x axis to the serial for debugging.
-    Serial.println(yAxis); //Prints the y axis to the serial for debugging.
-    Serial.println(digitalRead(SW_pin));
+    Serial.println(xAxis); //Ispis x ose na serijski port
+    Serial.println(yAxis); //Ispis x ose na serijski port
 
-    if (yAxis > 900 && direction != "up") { //If player moves the analog stick up, and if snake isn't going down.
+    if (yAxis > 900 && direction != "up") { //Ako je input na gore i zmija ne ide na dolje podesavamo kao smjer kretanja
       direction = "down";
     }
-    if (yAxis < 500 && direction != "down") { //If player moves the analog stick down, and if snake isn't going up.
+    if (yAxis < 500 && direction != "down") { //Ako je input na dolje i zmija ne ide na gore podesavamo kao smjer kretanja
       direction = "up";
     }
-    if (xAxis > 900 && direction != "left") { //If player moves the analog stick right, and if snake isn't going left.
+    if (xAxis > 900 && direction != "left") {  //Ako je input na desno i zmija ne ide na lijevo podesavamo kao smjer kretanja
       direction = "right";
     }
-    if (xAxis < 500 && direction != "right") { //If player moves the analog stick left, and if snake isn't going right.
+    if (xAxis < 500 && direction != "right") { //Ako je input na lijevo i zmija ne ide na desno podesavamo kao smjer kretanja
       direction = "left";
     }
 
-    move(direction); //Move the snake in the direction.
+    move(direction); //Postavljamo novi smer kretanja zmije
 
-    checkIfHitFood(); //Checks if the snake moves onto the food.
+    checkIfHitFood(); //Provjera da li je zmija pojela hranu na ekranu
     checkIfHitSelf(); //Checks if the snake hits itself.
 
     drawSnake(); //Draws the snake on the MAX7219.
@@ -74,39 +74,33 @@ void loop() {
   }
 }
 
-//This method returns a more simple value to work with when reading the analogs.
-//Returns and int that is 0-8.
-int simple(int num) {
-  return (num * 9 / 1024);
-}
-
-//This method makes the snake move in the direction provided in the param.
+//Ovo je metoda koja usmjerava zmiju da ide u pravcu koji je odabran putem joystick-a
 void move(String dir) {
-  for (int i = snakeSize - 1; i > 0; i--) { //Go through all the snake body parts (excluding the head), and set it to the previous position.
+  for (int i = snakeSize - 1; i > 0; i--) { //Idemo kroz sve tacke zmijice i postavljamo ih kao prethodnu poziciju
     snakeX[i] = snakeX[i - 1];
     snakeY[i] = snakeY[i - 1];
   }
 
   if (dir == "up") {
-    if (snakeY[0] == 0) { //If snake tries to get out of bounds, teleport him on the opposite side.
+    if (snakeY[0] == 0) { //Ako zmija ide van granica, prelazi na drugu stranu ekrana
       snakeY[0] = 7;
     } else {
       snakeY[0]--;
     }
   } else if (dir == "down") {
-    if (snakeY[0] == 7) { //If snake tries to get out of bounds, teleport him on the opposite side.
+    if (snakeY[0] == 7) { //Ako zmija ide van granica, prelazi na drugu stranu ekrana
       snakeY[0] = 0;
     } else {
       snakeY[0]++;
     }
   } else if (dir == "left") {
-    if (snakeX[0] == 0) { //If snake tries to get out of bounds, teleport him on the opposite side.
+    if (snakeX[0] == 0) { //Ako zmija ide van granica, prelazi na drugu stranu ekrana
       snakeX[0] = 7;
     } else {
       snakeX[0]--;
     }
   } else if (dir == "right") {
-    if (snakeX[0] == 7) { //If snake tries to get out of bounds, teleport him on the opposite side.
+    if (snakeX[0] == 7) { //Ako zmija ide van granica, prelazi na drugu stranu ekrana
       snakeX[0] = 0;
     } else {
       snakeX[0]++;
@@ -128,16 +122,16 @@ void drawFood() {
   lc.setLed(0, foodY, foodX, false);
 }
 
-//This method sets a new location of the food randomly.
+//Generisanje hrane na nasumicnoj lokaciji na ekranu
 void newFood() {
   int newFoodX = random(0, 8);
   int newFoodY = random(0, 8);
-  while (isSnake(newFoodX, newFoodY)) { //If the new food coordinates are in the snake, then keep trying until they're not.
+  while (isSnake(newFoodX, newFoodY)) { //Ako su koordinate na lokaciji zmijice, pokusava se generacija nove dok ne bude van pozicije zmije
     newFoodX = random(0, 8);
     newFoodY = random(0, 8);
   }
-  foodX = newFoodX;
-  foodY = newFoodY;
+  foodX = newFoodX; // postavljanje hrane na ekran
+  foodY = newFoodY; // postavljanje hrane na ekran
 }
 
 //This method checks if the snake moves onto the food.
@@ -168,20 +162,20 @@ boolean isSnake(int x, int y) {
   return false;
 }
 
-//This method sets all the variables for a new game.
+//Podesavanje nove igre
 void newGame() {
-  Serial.println("Started game.");
-  for (int i = 0; i < 36; i++) { //Set all the values in the snake array to be off the screen, just in case.
+  Serial.println("Started game."); // Ispis na serijski port
+  for (int i = 0; i < 36; i++) { //Podesavanje svih varijabli da budu van ekrana, u slucaju da su ostale u memoriji, kada se igra ponovo
     snakeX[i] = -1;
     snakeY[i] = -1;
   }
 
-  snakeX[0] = 4; //Start at x4.
-  snakeY[0] = 8; //Start at y8.
-  direction = "up"; //Start with moving upward.
-  snakeSize = 1; //Start with only 1 snake part. (Which is the snake head)
-  newFood(); //Randomly create a new food.
-  inGame = true; //Set this variable to true so the loop() method could start.
+  snakeX[0] = 4; //Pocetak na x->4.
+  snakeY[0] = 8; //Pocetak na y->8.
+  direction = "up"; //Prvo se zmija krece ka gore
+  snakeSize = 1; //Velicina je na pocetku 1 tacka
+  newFood(); //Generisanje hrane na ekranu
+  inGame = true; //Podesavanje varijable koja oznacava da je mod "u igri" i pokrece kod i void loop()-a
 }
 
 //This method is called when the snake hits itself.
